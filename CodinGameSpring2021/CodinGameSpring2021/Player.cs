@@ -65,13 +65,25 @@ namespace CodinGameSpring2021
 
                 var map = new Map(cells, trees);
 
-                var treeToComplete = map.GetNextTreeToComplete();
+                var finalDay = 5;
+                if (day == finalDay)
+                {
+                    var treeToComplete = map.GetNextTreeToComplete();
+                    if (treeToComplete != null)
+                        Console.WriteLine($"COMPLETE {treeToComplete.CellIndex} nutrients: {nutrients}");
+                    else
+                        Console.WriteLine("WAIT");
+                }
+                else
+                {
+                    var treeToGrow = map.GetNextTreeToGrow(finalDay - day);
+                    if (treeToGrow != null)
+                        Console.WriteLine($"GROW {treeToGrow.CellIndex}");
+                    else
+                        Console.WriteLine("WAIT");
+                }
 
                 // GROW cellIdx | SEED sourceIdx targetIdx | COMPLETE cellIdx | WAIT <message>
-                if (treeToComplete != null)
-                    Console.WriteLine($"COMPLETE {treeToComplete.CellIndex} nutrients: {nutrients}");
-                else
-                    Console.WriteLine("WAIT");
 
                 // Console.WriteLine($"nutrients: {nutrients}");
                 // Write an action using Console.WriteLine()

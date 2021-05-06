@@ -18,7 +18,20 @@ namespace CodinGameSpring2021
         {
             var internalCells = Combine();
             return internalCells
-                   .Where(x => x.Tree?.IsMine ?? false)
+                   .Where(x => x.Tree != null)
+                   .Where(x => x.Tree.IsMine && !x.Tree.IsDormant && x.Tree.Size == 3)
+                   .OrderByDescending(x => x.Richness)
+                   .ThenByDescending(x => x.Tree.Size)
+                   .Select(x => x.Tree)
+                   .FirstOrDefault();
+        }
+
+        public Tree GetNextTreeToGrow(int daysToEnd)
+        {
+            var internalCells = Combine();
+            return internalCells
+                   .Where(x => x.Tree != null)
+                   .Where(x => x.Tree.IsMine && !x.Tree.IsDormant && x.Tree.Size < 3 && 3 - x.Tree.Size < daysToEnd)
                    .OrderByDescending(x => x.Richness)
                    .ThenByDescending(x => x.Tree.Size)
                    .Select(x => x.Tree)
