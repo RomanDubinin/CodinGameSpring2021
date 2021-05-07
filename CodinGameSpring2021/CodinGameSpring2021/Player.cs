@@ -5,6 +5,7 @@ namespace CodinGameSpring2021
 {
     class Player
     {
+        private static readonly int FinalizeCost = 4;
         static void Main(string[] args)
         {
             string[] inputs;
@@ -65,22 +66,19 @@ namespace CodinGameSpring2021
 
                 var map = new Map(cells, trees);
 
-                var finalDay = 5;
+                var finalDay = 23;
                 if (day == finalDay)
                 {
                     var treeToComplete = map.GetNextTreeToComplete();
                     if (treeToComplete != null)
                         Console.WriteLine($"COMPLETE {treeToComplete.CellIndex} nutrients: {nutrients}");
                     else
-                        Console.WriteLine("WAIT");
+                        Console.WriteLine(GrowSeedCompleteAction(map, finalDay, day, sun));
                 }
                 else
                 {
-                    var treeToGrow = map.GetNextTreeToGrow(finalDay - day);
-                    if (treeToGrow != null)
-                        Console.WriteLine($"GROW {treeToGrow.CellIndex}");
-                    else
-                        Console.WriteLine("WAIT");
+                    var action = GrowSeedCompleteAction(map, finalDay, day, sun);
+                    Console.WriteLine(action);
                 }
 
                 // GROW cellIdx | SEED sourceIdx targetIdx | COMPLETE cellIdx | WAIT <message>
@@ -89,6 +87,34 @@ namespace CodinGameSpring2021
                 // Write an action using Console.WriteLine()
                 // To debug: Console.Error.WriteLine("Debug messages...");
             }
+        }
+
+        private static string GrowSeedCompleteAction(Map map, int finalDay, int day, int sunPoints)
+        {
+            var daysLeft = finalDay - day;
+
+            var grownTreesCount = map.GetGrownTreesCount();
+            var lowResourcesForSeed = (grownTreesCount+1)*FinalizeCost > sunPoints && daysLeft <= 7 || daysLeft <= 5;
+            var lowResourcesForGrow = (grownTreesCount+1)*FinalizeCost > sunPoints && daysLeft <= 4;
+
+            //todo seed only if less than 6 seed already on field
+            var (tree, cellToSeed) = map.GetCellToSeed();
+            if (cellToSeed != null && !lowResourcesForSeed)
+                return $"SEED {tree.CellIndex} {cellToSeed}";
+
+            var highCellsFilled = map.IsHighCellsFilled();
+            if (highCellsFilled)
+            {
+                var treeToComplete = map.GetNextTreeToCompleteFromHighCell();
+                if (treeToComplete != null)
+                    return $"COMPLETE {treeToComplete.CellIndex}";
+            }
+
+            var treeToGrow = map.GetNextTreeToGrow(daysLeft);
+            if (treeToGrow != null && !lowResourcesForGrow)
+                return $"GROW {treeToGrow.CellIndex} {(lowResourcesForSeed ? "lowForSeed" : "")}";
+
+            return $"WAIT {(lowResourcesForGrow ? "lowForGrow" : "")}";
         }
     }
 }
