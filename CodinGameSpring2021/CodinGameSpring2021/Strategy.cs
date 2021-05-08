@@ -4,20 +4,68 @@ using System.Linq;
 
 namespace CodinGameSpring2021
 {
-    public class Map
+    public class Strategy
     {
         private readonly int daysInCycle = 6;
+        private readonly int finalizeCost = 4;
+        private readonly int finalDay = 23;
+        private readonly int day;
+
         private Dictionary<int, InternalCell> CellsDict { get; }
         private List<InternalCell> InternalCells { get => CellsDict.Select(x => x.Value).ToList(); }
         private List<Tree> Trees { get; }
 
-        public Map(List<Cell> cells, List<Tree> trees, int day)
+        public Strategy(List<Cell> cells, List<Tree> trees, int day)
         {
+            this.day = day;
             Trees = trees;
             CellsDict = Combine(cells, trees, day);
         }
 
-        public Tree GetNextTreeToComplete()
+        public string GetNextAction(int sunPoints)
+        {
+            if (day == finalDay)
+            {
+                var treeToComplete = GetNextTreeToComplete();
+                if (treeToComplete != null)
+                    return $"COMPLETE {treeToComplete.CellIndex}";
+
+                return GrowSeedCompleteAction(finalDay, day, sunPoints);
+            }
+
+            return GrowSeedCompleteAction(finalDay, day, sunPoints);
+        }
+
+        private string GrowSeedCompleteAction(int finalDay, int day, int sunPoints)
+        {
+            var daysLeft = finalDay - day;
+
+            var grownTreesCount = GetGrownTreesCount();
+            var lowResourcesForSeed = (grownTreesCount+1)*finalizeCost > sunPoints && daysLeft <= 7 || daysLeft <= 5;
+            var lowResourcesForGrow = (grownTreesCount+1)*finalizeCost > sunPoints && daysLeft <= 4;
+
+            //todo seed only if less than 6 seed already on field
+            var (tree, cellToSeed) = GetCellToSeed();
+            if (cellToSeed != null && !lowResourcesForSeed)
+                return $"SEED {tree.CellIndex} {cellToSeed}";
+
+            var highCellsFilled = IsHighCellsFilled();
+            if (highCellsFilled)
+            {
+                var treeToComplete = GetNextTreeToCompleteFromHighCell();
+                if (treeToComplete != null)
+                    return $"COMPLETE {treeToComplete.CellIndex}";
+            }
+
+            var treeToGrow = GetNextTreeToGrow(daysLeft);
+            if (treeToGrow != null && !lowResourcesForGrow)
+                return $"GROW {treeToGrow.CellIndex} {(lowResourcesForSeed ? "lowForSeed" : "")}";
+
+            return $"WAIT {(lowResourcesForGrow ? "lowForGrow" : "")}";
+        }
+
+
+        private Tree GetNextTreeToComplete()
         {
             return InternalCells
                    .Where(x => x.Tree != null)
@@ -28,7 +76,7 @@ namespace CodinGameSpring2021
                    .FirstOrDefault();
         }
 
-        public Tree GetNextTreeToCompleteFromHighCell()
+        private Tree GetNextTreeToCompleteFromHighCell()
         {
             return InternalCells
                    .Where(x => x.Tree != null && x.Richness == 3)
@@ -38,7 +86,7 @@ namespace CodinGameSpring2021
                    .FirstOrDefault();
         }
 
-        public Tree GetNextTreeToGrow(int daysToEnd)
+        private Tree GetNextTreeToGrow(int daysToEnd)
         {
             return InternalCells
                    .Where(x => x.Tree != null)
@@ -49,7 +97,7 @@ namespace CodinGameSpring2021
                    .FirstOrDefault();
         }
 
-        public int GetGrownTreesCount()
+        private int GetGrownTreesCount()
         {
             return Trees.Count(x => x.Size == 3);
         }
@@ -66,7 +114,7 @@ namespace CodinGameSpring2021
             return allFilled && withMyTrees.Count(x => x.Tree.Size == 3) > withMyTrees.Length - 2;
         }
 
-        public (Tree Tree, int? CellToSeed) GetCellToSeed()
+        private (Tree Tree, int? CellToSeed) GetCellToSeed()
         {
             var cellsFreeToSeed = Trees
                                   .Where(x => x.IsMine && !x.IsDormant)
@@ -163,11 +211,6 @@ namespace CodinGameSpring2021
                 return new[] {nearestNeighIndex, secondNeighIndex};
 
             return new[] {nearestNeighIndex, secondNeighIndex, thirdNeighIndex};
-        }
-
-        private bool IsSpookyShadow(InternalCell from, InternalCell to)
-        {
-            return from.Tree.Size >= to.Tree.Size;
         }
 
         private Dictionary<int, int[]> NeighboursTowardsCenter = new Dictionary<int, int[]>
