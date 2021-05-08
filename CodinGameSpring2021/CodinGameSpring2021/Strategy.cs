@@ -43,10 +43,10 @@ namespace CodinGameSpring2021
             var grownTreesCount = GetGrownTreesCount();
             var lowResourcesForSeed = (grownTreesCount+1)*finalizeCost > sunPoints && daysLeft <= 7 || daysLeft <= 5;
             var lowResourcesForGrow = (grownTreesCount+1)*finalizeCost > sunPoints && daysLeft <= 4;
+            var seedCount = GetSeedCount();
 
-            //todo seed only if less than 6 seed already on field
             var (tree, cellToSeed) = GetCellToSeed();
-            if (cellToSeed != null && !lowResourcesForSeed)
+            if (cellToSeed != null && !lowResourcesForSeed && seedCount < 4)
                 return $"SEED {tree.CellIndex} {cellToSeed}";
 
             var highCellsFilled = IsHighCellsFilled();
@@ -62,6 +62,16 @@ namespace CodinGameSpring2021
                 return $"GROW {treeToGrow.CellIndex} {(lowResourcesForSeed ? "lowForSeed" : "")}";
 
             return $"WAIT {(lowResourcesForGrow ? "lowForGrow" : "")}";
+        }
+
+        private int GetSeedCount()
+        {
+            return Trees.Count(x => x.IsMine && x.Size == 0);
+        }
+
+        private int GetGrownTreesCount()
+        {
+            return Trees.Count(x => x.IsMine && x.Size == 3);
         }
 
 
@@ -95,11 +105,6 @@ namespace CodinGameSpring2021
                    .ThenByDescending(x => x.Tree.Size)
                    .Select(x => x.Tree)
                    .FirstOrDefault();
-        }
-
-        private int GetGrownTreesCount()
-        {
-            return Trees.Count(x => x.Size == 3);
         }
 
         public bool IsHighCellsFilled()
