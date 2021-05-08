@@ -74,7 +74,6 @@ namespace CodinGameSpring2021
             return Trees.Count(x => x.IsMine && x.Size == 3);
         }
 
-
         private Tree GetNextTreeToComplete()
         {
             return InternalCells
@@ -134,6 +133,10 @@ namespace CodinGameSpring2021
             var mediumCellsFreeToSeed = cellsFreeToSeed.Where(x => x.CellToSeed.Richness == 2);
             var allMediumCells = InternalCells.Where(x => x.Richness == 2 && x.Tree == null);
 
+            var treesOnHighCellsCount = InternalCells
+                                          .Where(x => x.Tree != null && x.Richness == 3)
+                                          .Count(x => x.Tree.IsMine);
+
             if (highCellsFreeToSeed.Count() != 0)
             {
                 var first = highCellsFreeToSeed.First();
@@ -143,7 +146,7 @@ namespace CodinGameSpring2021
             {
                 return (null, null);
             }
-            if (mediumCellsFreeToSeed.Count() != 0)
+            if (mediumCellsFreeToSeed.Count() != 0 && treesOnHighCellsCount < 4)
             {
                 var first = mediumCellsFreeToSeed.First();
                 return (first.Tree, first.CellToSeed.CellIndex);
