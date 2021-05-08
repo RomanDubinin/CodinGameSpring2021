@@ -50,7 +50,7 @@ namespace CodinGameSpring2021
                 return $"SEED {tree.CellIndex} {cellToSeed}";
 
             var highCellsFilled = IsHighCellsFilled();
-            if (highCellsFilled)
+            if (highCellsFilled && daysLeft > 3)
             {
                 var treeToComplete = GetNextTreeToCompleteFromHighCell();
                 if (treeToComplete != null)
