@@ -14,18 +14,16 @@ namespace CodinGameSpring2021
             for (int i = 0; i < numberOfCells; i++)
             {
                 inputs = Console.ReadLine().Split(' ');
-                int index = int.Parse(inputs[0]); // 0 is the center cell, the next cells spiral outwards
-                int richness = int.Parse(inputs[1]); // 0 if the cell is unusable, 1-3 for usable cells
-                int neigh0 = int.Parse(inputs[2]); // the index of the neighbouring cell for each direction
-                int neigh1 = int.Parse(inputs[3]);
-                int neigh2 = int.Parse(inputs[4]);
-                int neigh3 = int.Parse(inputs[5]);
-                int neigh4 = int.Parse(inputs[6]);
-                int neigh5 = int.Parse(inputs[7]);
                 cells.Add(new Cell
                 {
-                    CellIndex = index,
-                    Richness = richness
+                    CellIndex = int.Parse(inputs[0]),
+                    Richness = int.Parse(inputs[1]),
+                    Neigh0 = int.Parse(inputs[2]),
+                    Neigh1 = int.Parse(inputs[3]),
+                    Neigh2 = int.Parse(inputs[4]),
+                    Neigh3 = int.Parse(inputs[5]),
+                    Neigh4 = int.Parse(inputs[6]),
+                    Neigh5 = int.Parse(inputs[7])
                 });
             }
 
@@ -64,7 +62,7 @@ namespace CodinGameSpring2021
                     string possibleMove = Console.ReadLine();
                 }
 
-                var map = new Map(cells, trees);
+                var map = new Map(cells, trees, day);
 
                 var finalDay = 23;
                 if (day == finalDay)

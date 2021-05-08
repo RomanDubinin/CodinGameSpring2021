@@ -6,15 +6,15 @@ namespace CodinGameSpring2021
 {
     public class Map
     {
-        private Dictionary<int, InternalCell> CellsDict { get; set; }
-        private List<InternalCell> InternalCells { get; set; }
-        private List<Tree> Trees { get; set; }
+        private readonly int daysInCycle = 6;
+        private Dictionary<int, InternalCell> CellsDict { get; }
+        private List<InternalCell> InternalCells { get => CellsDict.Select(x => x.Value).ToList(); }
+        private List<Tree> Trees { get; }
 
-        public Map(List<Cell> cells, List<Tree> trees)
+        public Map(List<Cell> cells, List<Tree> trees, int day)
         {
             Trees = trees;
-            InternalCells = Combine(cells, trees);
-            CellsDict = InternalCells.ToDictionary(x => x.CellIndex, x => x);
+            CellsDict = Combine(cells, trees, day);
         }
 
         public Tree GetNextTreeToComplete()
@@ -23,6 +23,7 @@ namespace CodinGameSpring2021
                    .Where(x => x.Tree != null)
                    .Where(x => x.Tree.IsMine && !x.Tree.IsDormant && x.Tree.Size == 3)
                    .OrderByDescending(x => x.Richness)
+                   .ThenBy(x => x.ShadowSize >= x.Tree.Size ? 2 : 1)
                    .Select(x => x.Tree)
                    .FirstOrDefault();
         }
@@ -32,6 +33,7 @@ namespace CodinGameSpring2021
             return InternalCells
                    .Where(x => x.Tree != null && x.Richness == 3)
                    .Where(x => x.Tree.IsMine && !x.Tree.IsDormant && x.Tree.Size == 3)
+                   .OrderBy(x => x.ShadowSize >= x.Tree.Size ? 2 : 1)
                    .Select(x => x.Tree)
                    .FirstOrDefault();
         }
@@ -115,15 +117,57 @@ namespace CodinGameSpring2021
             };
         }
 
-        private List<InternalCell> Combine(List<Cell> cells, List<Tree> trees)
+        private Dictionary<int, InternalCell> Combine(List<Cell> cells, List<Tree> trees, int day)
         {
-            return cells.Select(x => new InternalCell
-                        {
-                            CellIndex = x.CellIndex,
-                            Richness = x.Richness,
-                            Tree = trees.FirstOrDefault(t => t.CellIndex == x.CellIndex)
-                        })
-                        .ToList();
+            var internalCells = cells.Select(x => new InternalCell
+                                     {
+                                         CellIndex = x.CellIndex,
+                                         Richness = x.Richness,
+                                         Tree = trees.FirstOrDefault(t => t.CellIndex == x.CellIndex),
+                                         Neigh0 = x.Neigh0,
+                                         Neigh1 = x.Neigh1,
+                                         Neigh2 = x.Neigh2,
+                                         Neigh3 = x.Neigh3,
+                                         Neigh4 = x.Neigh4,
+                                         Neigh5 = x.Neigh5
+                                     })
+                                     .ToDictionary(x => x.CellIndex, x => x);
+
+            foreach (var (k, cell) in internalCells)
+            {
+                if (cell.Tree != null)
+                {
+                    foreach (var underShadowNeighbour in GetUnderShadowNeighbours(internalCells, cell, day+1))
+                    {
+                        var underShadow = internalCells[underShadowNeighbour];
+                        underShadow.ShadowSize = cell.Tree.Size;
+                    }
+                }
+            }
+
+            return internalCells;
+        }
+
+        private int[] GetUnderShadowNeighbours(Dictionary<int, InternalCell> cells, InternalCell cell, int nextDay)
+        {
+            var nearestNeighIndex = cell.Neighbours[nextDay % daysInCycle];
+            if (nearestNeighIndex == -1 || cell.Tree.Size == 0)
+                return Array.Empty<int>();
+
+            var secondNeighIndex = cells[nearestNeighIndex].Neighbours[nextDay % daysInCycle];
+            if (secondNeighIndex == -1 || cell.Tree.Size == 1)
+                return new[] {nearestNeighIndex};
+
+            var thirdNeighIndex = cells[secondNeighIndex].Neighbours[nextDay % daysInCycle];
+            if (thirdNeighIndex == -1 || cell.Tree.Size == 2)
+                return new[] {nearestNeighIndex, secondNeighIndex};
+
+            return new[] {nearestNeighIndex, secondNeighIndex, thirdNeighIndex};
+        }
+
+        private bool IsSpookyShadow(InternalCell from, InternalCell to)
+        {
+            return from.Tree.Size >= to.Tree.Size;
         }
 
         private Dictionary<int, int[]> NeighboursTowardsCenter = new Dictionary<int, int[]>
@@ -172,6 +216,16 @@ namespace CodinGameSpring2021
             public int CellIndex { get; set; }
             public int Richness { get; set; }
             public Tree Tree { get; set; }
+            public int ShadowSize { get; set; }
+
+            public int Neigh0 { get; set; }
+            public int Neigh1 { get; set; }
+            public int Neigh2 { get; set; }
+            public int Neigh3 { get; set; }
+            public int Neigh4 { get; set; }
+            public int Neigh5 { get; set; }
+
+            public int[] Neighbours { get => new[] {Neigh0, Neigh1, Neigh2, Neigh3, Neigh4, Neigh5}; }
         }
     }
 }
