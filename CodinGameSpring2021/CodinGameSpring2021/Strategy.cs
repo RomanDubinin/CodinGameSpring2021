@@ -81,7 +81,7 @@ namespace CodinGameSpring2021
                    .Where(x => x.Tree != null)
                    .Where(x => x.Tree.IsMine && !x.Tree.IsDormant && x.Tree.Size == 3)
                    .OrderByDescending(x => x.Richness)
-                   .ThenBy(x => x.ShadowSize >= x.Tree.Size ? 2 : 1)
+                   .ThenByDescending(x => x.ShadowSize >= x.Tree.Size ? 2 : 1)
                    .Select(x => x.Tree)
                    .FirstOrDefault();
         }
@@ -91,7 +91,7 @@ namespace CodinGameSpring2021
             return InternalCells
                    .Where(x => x.Tree != null && x.Richness == 3)
                    .Where(x => x.Tree.IsMine && !x.Tree.IsDormant && x.Tree.Size == 3)
-                   .OrderBy(x => x.ShadowSize >= x.Tree.Size ? 2 : 1)
+                   .OrderByDescending(x => x.ShadowSize >= x.Tree.Size ? 2 : 1)
                    .Select(x => x.Tree)
                    .FirstOrDefault();
         }
