@@ -49,8 +49,7 @@ namespace CodinGameSpring2021
             if (cellToSeed != null && !lowResourcesForSeed && seedCount < 4)
                 return $"SEED {tree.CellIndex} {cellToSeed}";
 
-            var highCellsFilled = IsHighCellsFilled();
-            if (highCellsFilled && daysLeft > 3)
+            if (grownTreesCount > 2 && daysLeft > 2)
             {
                 var treeToComplete = GetNextTreeToCompleteFromHighCell();
                 if (treeToComplete != null)
@@ -106,18 +105,6 @@ namespace CodinGameSpring2021
                    .FirstOrDefault();
         }
 
-        public bool IsHighCellsFilled()
-        {
-            var allFilled = InternalCells
-                            .Where(x => x.Richness == 3)
-                            .All(x => x.Tree != null);
-            var withMyTrees = InternalCells
-                              .Where(x => x.Richness == 3)
-                              .Where(x => x.Tree?.IsMine ?? false)
-                              .ToArray();
-            return allFilled && withMyTrees.Count(x => x.Tree.Size == 3) > withMyTrees.Length - 2;
-        }
-
         private (Tree Tree, int? CellToSeed) GetCellToSeed()
         {
             var cellsFreeToSeed = Trees
@@ -137,7 +124,7 @@ namespace CodinGameSpring2021
                                           .Where(x => x.Tree != null && x.Richness == 3)
                                           .Count(x => x.Tree.IsMine);
 
-            if (highCellsFreeToSeed.Count() != 0)
+            if (highCellsFreeToSeed.Count() != 0 && treesOnHighCellsCount < 4)
             {
                 var first = highCellsFreeToSeed.First();
                 return (first.Tree, first.CellToSeed.CellIndex);
